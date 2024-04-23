@@ -1,0 +1,17 @@
+Protocol Design:
+The protocol for file transfer over TCP/IP in our system follows approach:
+
+1. Client establishes a connection with the server.
+2. Client sends a request to the server to initiate the file transfer.
+3. Server acknowledges the request and prepares to send the file.
+4. Server reads the file from its storage and sends it to the client in chunks.
+5. Client receives the file chunks from the server and reconstructs the complete file.
+6. Once the file transfer is complete, the client sends an acknowledgment to the server.
+7. Server receives the acknowledgment and closes the connection.
+
+System Organization:
+Two main components: the server and the client. 
+The server component is responsible for listening for incoming connections, handling file transfer requests, 
+and sending the file to the client. 
+The client component is responsible for initiating the connection, requesting the file transfer, 
+receiving the file chunks, and acknowledging the successful transfer.
