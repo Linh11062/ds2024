@@ -13,7 +13,7 @@ typedef struct {
     int value;
 } KeyValuePair;
 
-void mapper(const char* line, KeyValuePair* key_value_pairs, int* count) {
+void process_line(const char* line, KeyValuePair* key_value_pairs, int* count) {
     char buffer[MAX_LINE_LENGTH];
     strcpy(buffer, line);
 
@@ -27,34 +27,26 @@ void mapper(const char* line, KeyValuePair* key_value_pairs, int* count) {
     }
 }
 
-void reducer(KeyValuePair* key_value_pairs, int count) {
-    KeyValuePair word_counts[MAX_PAIRS];
-    int word_counts_count = 0;
-
-    for (int i = 0; i < count; i++) {
-        KeyValuePair* pair = &(key_value_pairs[i]);
+void reduce(KeyValuePair* input_pairs, int input_count, KeyValuePair* output_pairs, int* output_count) {
+    for (int i = 0; i < input_count; i++) {
+        KeyValuePair* input_pair = &(input_pairs[i]);
 
         int found = 0;
-        for (int j = 0; j < word_counts_count; j++) {
-            KeyValuePair* count_pair = &(word_counts[j]);
-            if (strcmp(pair->key, count_pair->key) == 0) {
-                count_pair->value += pair->value;
+        for (int j = 0; j < *output_count; j++) {
+            KeyValuePair* output_pair = &(output_pairs[j]);
+            if (strcmp(input_pair->key, output_pair->key) == 0) {
+                output_pair->value += input_pair->value;
                 found = 1;
                 break;
             }
         }
 
         if (!found) {
-            KeyValuePair* new_pair = &(word_counts[word_counts_count]);
-            strcpy(new_pair->key, pair->key);
-            new_pair->value = pair->value;
-            word_counts_count++;
+            KeyValuePair* new_pair = &(output_pairs[*output_count]);
+            strcpy(new_pair->key, input_pair->key);
+            new_pair->value = input_pair->value;
+            (*output_count)++;
         }
-    }
-
-    for (int i = 0; i < word_counts_count; i++) {
-        KeyValuePair* pair = &(word_counts[i]);
-        printf("%s: %d\n", pair->key, pair->value);
     }
 }
 
@@ -70,7 +62,7 @@ void map_reduce(const char* input_file) {
     int intermediate_count = 0;
 
     while (fgets(line, sizeof(line), file) != NULL) {
-        mapper(line, intermediate_key_value_pairs, &intermediate_count);
+        process_line(line, intermediate_key_value_pairs, &intermediate_count);
     }
 
     fclose(file);
@@ -78,33 +70,16 @@ void map_reduce(const char* input_file) {
     KeyValuePair grouped_key_value_pairs[MAX_PAIRS];
     int grouped_count = 0;
 
-    for (int i = 0; i < intermediate_count; i++) {
-        KeyValuePair* pair = &(intermediate_key_value_pairs[i]);
+    reduce(intermediate_key_value_pairs, intermediate_count, grouped_key_value_pairs, &grouped_count);
 
-        int found = 0;
-        for (int j = 0; j < grouped_count; j++) {
-            KeyValuePair* group_pair = &(grouped_key_value_pairs[j]);
-            if (strcmp(pair->key, group_pair->key) == 0) {
-                strcpy(group_pair->key, pair->key);
-                group_pair->value += pair->value;
-                found = 1;
-                break;
-            }
-        }
-
-        if (!found) {
-            KeyValuePair* new_pair = &(grouped_key_value_pairs[grouped_count]);
-            strcpy(new_pair->key, pair->key);
-            new_pair->value = pair->value;
-            grouped_count++;
-        }
+    for (int i = 0; i < grouped_count; i++) {
+        KeyValuePair* pair = &(grouped_key_value_pairs[i]);
+        printf("%s: %d\n", pair->key, pair->value);
     }
-
-    reducer(grouped_key_value_pairs, grouped_count);
 }
 
 int main() {
-    const char* input_file = "cheet.txt";
+    const char* input_file = "file4.txt";
     clock_t start = clock();
 
     map_reduce(input_file);
