@@ -1,0 +1,3 @@
+E:\B3\distributed\src
+E:\B3\distributed\nfs-sunrpc-master\src
+E:\Test\lab4
